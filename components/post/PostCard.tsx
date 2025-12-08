@@ -1,10 +1,12 @@
 "use client";
 
+import React, { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils/time";
 import type { PostWithStats } from "@/lib/types";
+import LikeButton, { type LikeButtonHandle } from "./LikeButton";
 // Avatar 컴포넌트는 나중에 shadcn/ui로 추가 예정
 // 임시로 간단한 Avatar 구현
 
@@ -34,9 +36,43 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
   const userInitials = userName.charAt(0).toUpperCase();
 
   // 캡션 처리 (2줄 초과 시 "... 더 보기")
-  const [showFullCaption, setShowFullCaption] = React.useState(false);
+  const [showFullCaption, setShowFullCaption] = useState(false);
   const captionLines = post.caption ? post.caption.split("\n") : [];
   const shouldTruncate = captionLines.length > 2 || (post.caption && post.caption.length > 100);
+
+  // 더블탭 좋아요 관련 상태
+  const [showBigHeart, setShowBigHeart] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [isLiked, setIsLiked] = useState(post.is_liked || false);
+  const lastTapRef = useRef(0);
+  const likeButtonRef = useRef<LikeButtonHandle>(null);
+
+  // 더블탭 감지 및 좋아요 처리
+  const handleDoubleTap = useCallback(() => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300; // 300ms 이내 더블탭으로 간주
+
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // 더블탭 감지 - 좋아요가 아닌 경우에만 좋아요 추가
+      if (!isLiked && likeButtonRef.current) {
+        likeButtonRef.current.handleLike();
+        // 큰 하트 애니메이션 표시
+        setShowBigHeart(true);
+        setTimeout(() => {
+          setShowBigHeart(false);
+        }, 1000);
+      }
+      lastTapRef.current = 0; // 리셋
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [isLiked]);
+
+  // 좋아요 상태 변경 핸들러
+  const handleLikeChange = useCallback((liked: boolean, newLikesCount: number) => {
+    setIsLiked(liked);
+    setLikesCount(newLikesCount);
+  }, []);
 
   return (
     <article className="bg-white border border-instagram-border border-t-0 mb-4">
@@ -73,7 +109,14 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
       </header>
 
       {/* 이미지 영역 */}
-      <div className="relative w-full aspect-square bg-gray-100">
+      <div
+        className="relative w-full aspect-square bg-gray-100 cursor-pointer select-none"
+        onDoubleClick={handleDoubleTap}
+        onTouchEnd={(e) => {
+          // 모바일 터치 이벤트 지원
+          handleDoubleTap();
+        }}
+      >
         <Image
           src={post.image_url}
           alt={post.caption || `${userName}의 게시물`}
@@ -81,33 +124,33 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 630px"
           loading="lazy"
+          draggable={false}
           onError={(e) => {
             // 이미지 로딩 실패 시 대체 처리
             const target = e.target as HTMLImageElement;
             target.src = "/placeholder-image.png"; // 나중에 실제 placeholder 이미지로 교체
           }}
         />
+        {/* 더블탭 큰 하트 애니메이션 */}
+        {showBigHeart && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <Heart className="w-20 h-20 fill-instagram-like text-instagram-like animate-fade-in-out" />
+          </div>
+        )}
       </div>
 
       {/* 액션 버튼 */}
       <div className="flex items-center justify-between px-4 py-3 h-[48px]">
         <div className="flex items-center gap-4">
-          <button
-            className="p-1 hover:opacity-70 transition-opacity"
-            aria-label="좋아요"
-            onClick={() => {
-              // 나중에 좋아요 기능 구현
-              alert("좋아요 기능은 곧 추가될 예정입니다.");
-            }}
-          >
-            <Heart
-              className={`w-6 h-6 ${
-                post.is_liked
-                  ? "fill-instagram-like text-instagram-like"
-                  : "text-instagram-text-primary"
-              }`}
-            />
-          </button>
+          <LikeButton
+            ref={likeButtonRef}
+            postId={post.id}
+            initialLiked={isLiked}
+            initialLikesCount={likesCount}
+            onLikeChange={handleLikeChange}
+            size="md"
+            showCount={false}
+          />
           <button
             className="p-1 hover:opacity-70 transition-opacity"
             aria-label="댓글"
@@ -142,10 +185,10 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
       </div>
 
       {/* 좋아요 수 */}
-      {post.likes_count > 0 && (
+      {likesCount > 0 && (
         <div className="px-4 pb-2">
           <p className="text-instagram-sm font-instagram-bold text-instagram-text-primary">
-            좋아요 {post.likes_count.toLocaleString()}개
+            좋아요 {likesCount.toLocaleString()}개
           </p>
         </div>
       )}
