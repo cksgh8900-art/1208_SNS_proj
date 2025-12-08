@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, SquarePlus, Heart, User } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import CreatePostModal from "@/components/post/CreatePostModal";
 
 /**
  * @file BottomNav.tsx
@@ -48,7 +50,7 @@ const navItems: NavItem[] = [
     icon: SquarePlus,
     label: "만들기",
     onClick: () => {
-      alert("게시물 작성 기능은 곧 추가될 예정입니다.");
+      // CreatePostModal 열기 (BottomNav 컴포넌트 내부에서 처리)
     },
   },
   {
@@ -69,6 +71,7 @@ const navItems: NavItem[] = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const [createPostOpen, setCreatePostOpen] = useState(false);
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[50px] bg-white border-t border-instagram-border z-40">
@@ -90,6 +93,26 @@ export default function BottomNav() {
           }
 
           if (isActionButton) {
+            // "만들기" 버튼인 경우 모달 열기
+            if (item.href === "#") {
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => setCreatePostOpen(true)}
+                  className="flex-1 flex items-center justify-center h-full hover:bg-gray-50 transition-colors"
+                  aria-label={item.label}
+                >
+                  <Icon
+                    className={`w-6 h-6 ${
+                      isActive
+                        ? "text-instagram-text-primary"
+                        : "text-instagram-text-primary"
+                    }`}
+                  />
+                </button>
+              );
+            }
+
             return (
               <button
                 key={item.href}
@@ -127,6 +150,12 @@ export default function BottomNav() {
           </div>
         </SignedOut>
       </div>
+
+      {/* CreatePostModal */}
+      <CreatePostModal
+        open={createPostOpen}
+        onOpenChange={setCreatePostOpen}
+      />
     </nav>
   );
 }

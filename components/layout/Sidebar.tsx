@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, SquarePlus, User } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import CreatePostModal from "@/components/post/CreatePostModal";
 
 /**
  * @file Sidebar.tsx
@@ -50,8 +52,7 @@ const menuItems: MenuItem[] = [
     icon: SquarePlus,
     label: "만들기",
     onClick: () => {
-      // 1차에서는 알림만 표시
-      alert("게시물 작성 기능은 곧 추가될 예정입니다.");
+      // CreatePostModal 열기 (Sidebar 컴포넌트 내부에서 처리)
     },
   },
   {
@@ -64,6 +65,7 @@ const menuItems: MenuItem[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [createPostOpen, setCreatePostOpen] = useState(false);
 
   return (
     <aside className="hidden md:flex md:flex-col md:fixed md:left-0 md:top-0 md:h-screen md:bg-white md:border-r md:border-instagram-border md:z-40">
@@ -90,6 +92,34 @@ export default function Sidebar() {
                     showText={true}
                   />
                 </SignedIn>
+              );
+            }
+
+            if (isSearchOrCreate && item.href === "#") {
+              // "만들기" 버튼
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => setCreatePostOpen(true)}
+                  className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
+                  <Icon
+                    className={`w-6 h-6 ${
+                      isActive
+                        ? "text-instagram-text-primary"
+                        : "text-instagram-text-primary"
+                    }`}
+                  />
+                  <span
+                    className={`text-instagram-sm ${
+                      isActive
+                        ? "font-instagram-bold text-instagram-text-primary"
+                        : "font-instagram-normal text-instagram-text-primary"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </button>
               );
             }
 
@@ -157,6 +187,26 @@ export default function Sidebar() {
               );
             }
 
+            if (isSearchOrCreate && item.href === "#") {
+              // "만들기" 버튼
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => setCreatePostOpen(true)}
+                  className="p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  title={item.label}
+                >
+                  <Icon
+                    className={`w-6 h-6 ${
+                      isActive
+                        ? "text-instagram-text-primary"
+                        : "text-instagram-text-primary"
+                    }`}
+                  />
+                </button>
+              );
+            }
+
             if (isSearchOrCreate && item.onClick) {
               return (
                 <button
@@ -186,6 +236,12 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
+
+      {/* CreatePostModal */}
+      <CreatePostModal
+        open={createPostOpen}
+        onOpenChange={setCreatePostOpen}
+      />
     </aside>
   );
 }
