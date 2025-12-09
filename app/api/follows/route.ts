@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClerkSupabaseClient } from "@/lib/supabase/server";
 import { auth } from "@clerk/nextjs/server";
+import { logError, toAPIError } from "@/lib/utils/error";
+
+/**
+ * 에러 응답 생성 헬퍼 함수
+ */
+function createErrorResponse(message: string, statusCode: number, details?: any) {
+  return NextResponse.json(
+    {
+      error: message,
+      ...(process.env.NODE_ENV === "development" && details && { details }),
+    },
+    { status: statusCode }
+  );
+}
 import type { ApiResponse } from "@/lib/types";
 
 /**

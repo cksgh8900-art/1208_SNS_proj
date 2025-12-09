@@ -292,16 +292,22 @@
 
 ## 12. 에러 핸들링 및 최적화
 
-- [ ] 에러 핸들링
-  - [ ] API 에러 처리
-  - [ ] 사용자 친화적 에러 메시지
-  - [ ] 네트워크 에러 처리
-- [ ] 이미지 최적화
-  - [ ] Next.js Image 컴포넌트 사용
-  - [ ] Lazy loading
-- [ ] 성능 최적화
-  - [ ] React.memo 적용 (필요한 컴포넌트)
-  - [ ] useMemo, useCallback 활용
+- [x] 에러 핸들링
+  - [x] 에러 타입 정의 및 유틸리티 구현 (lib/utils/error.ts, lib/utils/network.ts)
+  - [x] API 에러 처리 개선 (일관된 에러 응답 형식, 적절한 HTTP 상태 코드)
+  - [x] 사용자 친화적 에러 메시지 변환 함수 구현
+  - [x] 네트워크 에러 처리 (연결 확인, 타임아웃, 재시도 로직)
+  - [x] 전역 에러 바운더리 구현 (ErrorBoundary 컴포넌트)
+  - [x] 클라이언트 컴포넌트 에러 핸들링 개선
+- [x] 이미지 최적화
+  - [x] Next.js Image 컴포넌트 사용 (이미 적용됨)
+  - [x] Lazy loading (이미 적용됨)
+  - [x] 이미지 품질 최적화 (quality 속성 추가)
+  - [x] 이미지 에러 처리 (onError 핸들러 추가)
+- [x] 성능 최적화
+  - [x] React.memo 적용 (PostCard, PostCardSkeleton, CommentList, PostGrid)
+  - [x] useMemo 활용 (복잡한 계산, 포맷된 데이터)
+  - [x] useCallback 최적화 (이미 적용됨)
 
 ## 13. 최종 마무리
 

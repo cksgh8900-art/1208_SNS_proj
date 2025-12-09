@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import { Heart } from "lucide-react";
+import { getUserFriendlyErrorMessage, logError } from "@/lib/utils/error";
 
 /**
  * @file LikeButton.tsx
@@ -94,14 +95,14 @@ const LikeButton = forwardRef<LikeButtonHandle, LikeButtonProps>(function LikeBu
         onLikeChange(!liked, data.data?.likesCount || likesCount);
       }
     } catch (error: any) {
-      console.error("좋아요 처리 에러:", error);
+      logError(error, "좋아요 처리");
       
       // 실패 시 롤백
       setLiked(previousLiked);
       setLikesCount(previousCount);
 
-      // 에러 메시지 표시 (선택사항)
-      // alert(error.message);
+      // 에러 메시지는 상위 컴포넌트에서 처리하도록 함
+      // 필요시 여기서도 처리 가능
     } finally {
       setLoading(false);
     }

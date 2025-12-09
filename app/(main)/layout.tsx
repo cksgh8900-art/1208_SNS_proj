@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { SignInButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 /**
  * @file app/(main)/layout.tsx
@@ -27,7 +28,8 @@ export default function MainLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-instagram-background">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-instagram-background">
       {/* Mobile Header */}
       <Header />
 
@@ -73,7 +75,8 @@ export default function MainLayout({
 
       {/* Mobile BottomNav */}
       <BottomNav />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
 

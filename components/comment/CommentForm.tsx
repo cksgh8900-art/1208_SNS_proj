@@ -96,10 +96,11 @@ export default function CommentForm({
           onSubmit(data.data);
         }
       }
-    } catch (err: any) {
-      console.error("댓글 작성 에러:", err);
-      setError(err.message || "댓글 작성 중 오류가 발생했습니다.");
-    } finally {
+        } catch (err: any) {
+          logError(err, "댓글 작성");
+          const errorMessage = getUserFriendlyErrorMessage(err);
+          setError(errorMessage);
+        } finally {
       setSubmitting(false);
     }
   }, [content, postId, onSubmit, validateComment]);

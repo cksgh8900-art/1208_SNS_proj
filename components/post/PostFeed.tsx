@@ -5,6 +5,8 @@ import { useAuth } from "@clerk/nextjs";
 import PostCard from "./PostCard";
 import PostCardSkeleton from "./PostCardSkeleton";
 import type { PostWithStats } from "@/lib/types";
+import { getUserFriendlyErrorMessage, logError, isNetworkError } from "@/lib/utils/error";
+import { fetchWithRetry, checkNetworkStatus } from "@/lib/utils/network";
 
 /**
  * @file PostFeed.tsx
@@ -46,6 +48,11 @@ export default function PostFeed({ userId, initialPosts }: PostFeedProps) {
     setError(null);
 
     try {
+      // 네트워크 상태 확인
+      if (!checkNetworkStatus()) {
+        throw new Error("네트워크 연결을 확인해주세요.");
+      }
+
       const params = new URLSearchParams({
         limit: limit.toString(),
         offset: currentOffset.toString(),
@@ -55,7 +62,7 @@ export default function PostFeed({ userId, initialPosts }: PostFeedProps) {
         params.append("userId", userId);
       }
 
-      const response = await fetch(`/api/posts?${params.toString()}`);
+      const response = await fetchWithRetry(`/api/posts?${params.toString()}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -70,8 +77,21 @@ export default function PostFeed({ userId, initialPosts }: PostFeedProps) {
         setHasMore(false);
       }
     } catch (err: any) {
-      console.error("게시물 로드 에러:", err);
-      setError(err.message || "게시물을 불러오는 중 오류가 발생했습니다.");
+      logError(err, "게시물 로드");
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      setError(errorMessage);
+      
+      // 네트워크 에러인 경우 추가 처리
+      if (isNetworkError(err)) {
+        // 네트워크 상태 변경 감지
+        const cleanup = onNetworkStatusChange((isOnline) => {
+          if (isOnline && posts.length === 0) {
+            // 네트워크가 복구되면 자동으로 재시도
+            loadPosts(0);
+          }
+        });
+        return cleanup;
+      }
     } finally {
       setLoading(false);
       isLoadingRef.current = false;

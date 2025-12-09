@@ -128,10 +128,11 @@ export default function PostModal({
           setError("게시물을 찾을 수 없습니다.");
         }
       }
-    } catch (err: any) {
-      console.error("게시물 로드 에러:", err);
-      setError(err.message || "게시물을 불러오는 중 오류가 발생했습니다.");
-    } finally {
+      } catch (err: any) {
+        logError(err, "게시물 모달 로드");
+        const errorMessage = getUserFriendlyErrorMessage(err);
+        setError(errorMessage);
+      } finally {
       setLoading(false);
     }
   };
@@ -279,8 +280,14 @@ export default function PostModal({
               className="object-contain transition-opacity duration-300"
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
+              quality={90}
               onLoad={() => {
                 // 이미지 로딩 완료 시 페이드 인 효과는 CSS transition으로 처리됨
+              }}
+              onError={(e) => {
+                // 이미지 로딩 실패 시 대체 처리
+                const target = e.target as HTMLImageElement;
+                target.src = "/placeholder-image.png";
               }}
             />
             {/* 더블탭 큰 하트 애니메이션 */}
@@ -312,8 +319,14 @@ export default function PostModal({
             className="object-contain transition-opacity duration-300"
             sizes="100vw"
             priority
+            quality={90}
             onLoad={() => {
               // 이미지 로딩 완료 시 페이드 인 효과는 CSS transition으로 처리됨
+            }}
+            onError={(e) => {
+              // 이미지 로딩 실패 시 대체 처리
+              const target = e.target as HTMLImageElement;
+              target.src = "/placeholder-image.png";
             }}
           />
           {showBigHeart && (

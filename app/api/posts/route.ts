@@ -3,6 +3,7 @@ import { createClerkSupabaseClient } from "@/lib/supabase/server";
 import { getServiceRoleClient } from "@/lib/supabase/service-role";
 import { auth } from "@clerk/nextjs/server";
 import type { PostWithStats, Post } from "@/lib/types";
+import { APIError, logError, toAPIError } from "@/lib/utils/error";
 
 /**
  * @file app/api/posts/route.ts
@@ -23,15 +24,29 @@ import type { PostWithStats, Post } from "@/lib/types";
  * - 인증 검증 (Clerk)
  */
 
+/**
+ * 에러 응답 생성 헬퍼 함수
+ */
+function createErrorResponse(
+  message: string,
+  statusCode: number,
+  details?: any
+) {
+  return NextResponse.json(
+    {
+      error: message,
+      ...(process.env.NODE_ENV === "development" && details && { details }),
+    },
+    { status: statusCode }
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
     // 인증 확인
     const { userId: clerkUserId } = await auth();
     if (!clerkUserId) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return createErrorResponse("인증이 필요합니다.", 401);
     }
 
     // 쿼리 파라미터 파싱
@@ -51,10 +66,8 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (userError || !currentUser) {
-      return NextResponse.json(
-        { error: "사용자 정보를 찾을 수 없습니다." },
-        { status: 404 }
-      );
+      logError(userError, "사용자 조회");
+      return createErrorResponse("사용자 정보를 찾을 수 없습니다.", 404);
     }
 
     // 게시물 조회 쿼리 빌드
@@ -87,10 +100,11 @@ export async function GET(request: NextRequest) {
     const { data: posts, error: postsError } = await query;
 
     if (postsError) {
-      console.error("게시물 조회 에러:", postsError);
-      return NextResponse.json(
-        { error: "게시물을 불러오는 중 오류가 발생했습니다." },
-        { status: 500 }
+      logError(postsError, "게시물 조회");
+      return createErrorResponse(
+        "게시물을 불러오는 중 오류가 발생했습니다.",
+        500,
+        postsError
       );
     }
 
@@ -180,10 +194,7 @@ export async function POST(request: NextRequest) {
     // 인증 확인
     const { userId: clerkUserId } = await auth();
     if (!clerkUserId) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return createErrorResponse("인증이 필요합니다.", 401);
     }
 
     // FormData 파싱
@@ -193,19 +204,13 @@ export async function POST(request: NextRequest) {
 
     // 이미지 파일 검증
     if (!imageFile) {
-      return NextResponse.json(
-        { error: "이미지 파일이 필요합니다." },
-        { status: 400 }
-      );
+      return createErrorResponse("이미지 파일이 필요합니다.", 400);
     }
 
     // 파일 크기 검증 (5MB = 5 * 1024 * 1024 bytes)
     const maxSize = 5 * 1024 * 1024;
     if (imageFile.size > maxSize) {
-      return NextResponse.json(
-        { error: "이미지 크기는 5MB를 초과할 수 없습니다." },
-        { status: 400 }
-      );
+      return createErrorResponse("이미지 크기는 5MB를 초과할 수 없습니다.", 413);
     }
 
     // 파일 형식 검증
@@ -217,18 +222,18 @@ export async function POST(request: NextRequest) {
       "image/gif",
     ];
     if (!allowedTypes.includes(imageFile.type)) {
-      return NextResponse.json(
-        { error: "지원되는 이미지 형식만 업로드할 수 있습니다. (JPEG, PNG, WebP, GIF)" },
-        { status: 400 }
+      return createErrorResponse(
+        "지원되는 이미지 형식만 업로드할 수 있습니다. (JPEG, PNG, WebP, GIF)",
+        400
       );
     }
 
     // 캡션 검증 (최대 2,200자)
     const MAX_CAPTION_LENGTH = 2200;
     if (caption && caption.length > MAX_CAPTION_LENGTH) {
-      return NextResponse.json(
-        { error: `캡션은 최대 ${MAX_CAPTION_LENGTH}자까지 입력할 수 있습니다.` },
-        { status: 400 }
+      return createErrorResponse(
+        `캡션은 최대 ${MAX_CAPTION_LENGTH}자까지 입력할 수 있습니다.`,
+        400
       );
     }
 
@@ -243,10 +248,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !currentUser) {
-      return NextResponse.json(
-        { error: "사용자 정보를 찾을 수 없습니다." },
-        { status: 404 }
-      );
+      logError(userError, "사용자 조회");
+      return createErrorResponse("사용자 정보를 찾을 수 없습니다.", 404);
     }
 
     // 파일명 생성
@@ -268,10 +271,11 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("Storage 업로드 에러:", uploadError);
-      return NextResponse.json(
-        { error: "이미지 업로드 중 오류가 발생했습니다." },
-        { status: 500 }
+      logError(uploadError, "Storage 업로드");
+      return createErrorResponse(
+        "이미지 업로드 중 오류가 발생했습니다.",
+        500,
+        uploadError
       );
     }
 
@@ -292,12 +296,17 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (postError) {
-      console.error("게시물 생성 에러:", postError);
+      logError(postError, "게시물 생성");
       // 업로드된 파일 삭제 시도 (롤백)
-      await supabase.storage.from("posts").remove([filePath]);
-      return NextResponse.json(
-        { error: "게시물 생성 중 오류가 발생했습니다." },
-        { status: 500 }
+      try {
+        await supabase.storage.from("posts").remove([filePath]);
+      } catch (cleanupError) {
+        logError(cleanupError, "Storage 파일 삭제 (롤백)");
+      }
+      return createErrorResponse(
+        "게시물 생성 중 오류가 발생했습니다.",
+        500,
+        postError
       );
     }
 

@@ -6,7 +6,7 @@
  * Shimmer 애니메이션 효과를 포함합니다.
  */
 
-export default function PostCardSkeleton() {
+function PostCardSkeleton() {
   return (
     <article className="bg-white border border-instagram-border border-t-0 mb-4">
       {/* 헤더 Skeleton */}
@@ -88,4 +88,7 @@ export default function PostCardSkeleton() {
     </article>
   );
 }
+
+// 정적 컴포넌트이므로 React.memo로 최적화
+export default React.memo(PostCardSkeleton);
 

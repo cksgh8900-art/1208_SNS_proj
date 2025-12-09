@@ -44,10 +44,11 @@ interface PostCardProps {
   onPostDelete?: (postId: string) => void; // 게시물 삭제 콜백
 }
 
-export default function PostCard({ post, currentUserId, posts = [], onPostDelete }: PostCardProps) {
+function PostCard({ post, currentUserId, posts = [], onPostDelete }: PostCardProps) {
   const user = post.user;
-  const userName = user?.name || "알 수 없음";
-  const userInitials = userName.charAt(0).toUpperCase();
+  const userName = useMemo(() => user?.name || "알 수 없음", [user?.name]);
+  const userInitials = useMemo(() => userName.charAt(0).toUpperCase(), [userName]);
+  const formattedTime = useMemo(() => formatRelativeTime(post.created_at), [post.created_at]);
 
   // 본인 게시물 여부 확인
   const isOwnPost = currentUserId && user?.clerk_id === currentUserId;
@@ -145,10 +146,11 @@ export default function PostCard({ post, currentUserId, posts = [], onPostDelete
 
       setShowDeleteDialog(false);
       setShowMenu(false);
-    } catch (error: any) {
-      console.error("게시물 삭제 에러:", error);
-      alert(error.message || "게시물 삭제 중 오류가 발생했습니다.");
-    } finally {
+        } catch (error: any) {
+          logError(error, "게시물 삭제");
+          const errorMessage = getUserFriendlyErrorMessage(error);
+          alert(errorMessage);
+        } finally {
       setDeleting(false);
     }
   }, [post.id, deleting, onPostDelete]);
@@ -171,7 +173,7 @@ export default function PostCard({ post, currentUserId, posts = [], onPostDelete
               {userName}
             </Link>
             <span className="text-instagram-xs text-instagram-text-secondary">
-              {formatRelativeTime(post.created_at)}
+              {formattedTime}
             </span>
           </div>
         </div>
@@ -238,6 +240,7 @@ export default function PostCard({ post, currentUserId, posts = [], onPostDelete
           className="object-cover transition-opacity duration-300"
           sizes="(max-width: 768px) 100vw, 630px"
           loading="lazy"
+          quality={85}
           draggable={false}
           onLoad={() => {
             // 이미지 로딩 완료 시 페이드 인 효과는 CSS transition으로 처리됨
@@ -404,4 +407,17 @@ export default function PostCard({ post, currentUserId, posts = [], onPostDelete
     </article>
   );
 }
+
+// React.memo로 최적화 - props가 변경되지 않으면 리렌더링 방지
+export default React.memo(PostCard, (prevProps, nextProps) => {
+  // 커스텀 비교 함수: 중요한 props만 비교
+  return (
+    prevProps.post.id === nextProps.post.id &&
+    prevProps.post.likes_count === nextProps.post.likes_count &&
+    prevProps.post.comments_count === nextProps.post.comments_count &&
+    prevProps.post.caption === nextProps.post.caption &&
+    prevProps.currentUserId === nextProps.currentUserId &&
+    prevProps.posts.length === nextProps.posts.length
+  );
+});
 

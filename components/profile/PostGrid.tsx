@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { Heart, MessageCircle } from "lucide-react";
 import type { PostWithStats } from "@/lib/types";
 import PostModal from "@/components/post/PostModal";
+import { getUserFriendlyErrorMessage, logError } from "@/lib/utils/error";
 
 /**
  * @file PostGrid.tsx
@@ -206,4 +207,7 @@ export default function PostGrid({
     </>
   );
 }
+
+// React.memo로 최적화 - userId가 변경되지 않으면 리렌더링 방지
+export default React.memo(PostGrid);
 

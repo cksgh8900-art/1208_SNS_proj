@@ -80,14 +80,14 @@ export default function FollowButton({
         onFollowChange(!isFollowing, data.data?.followersCount || followersCount);
       }
     } catch (error: any) {
-      console.error("팔로우 처리 에러:", error);
+      logError(error, "팔로우 처리");
       
       // 실패 시 롤백
       setIsFollowing(previousFollowing);
       setFollowersCount(previousCount);
 
-      // 에러 메시지 표시 (선택사항)
-      // alert(error.message);
+      // 에러 메시지는 상위 컴포넌트에서 처리하도록 함
+      // 필요시 여기서도 처리 가능
     } finally {
       setLoading(false);
     }

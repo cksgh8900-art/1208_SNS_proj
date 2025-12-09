@@ -184,10 +184,11 @@ export default function CreatePostModal({
       if (onSuccess) {
         onSuccess();
       }
-    } catch (err: any) {
-      console.error("업로드 에러:", err);
-      setError(err.message || "게시물 업로드 중 오류가 발생했습니다.");
-    } finally {
+      } catch (err: any) {
+        logError(err, "게시물 업로드");
+        const errorMessage = getUserFriendlyErrorMessage(err);
+        setError(errorMessage);
+      } finally {
       setUploading(false);
     }
   }, [selectedFile, caption, onOpenChange, onSuccess]);

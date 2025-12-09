@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils/time";
 import type { CommentWithUser } from "@/lib/types";
+import { getUserFriendlyErrorMessage, logError } from "@/lib/utils/error";
 
 /**
  * @file CommentList.tsx
@@ -104,11 +105,14 @@ export default function CommentList({
     }
   };
 
-  // 표시할 댓글 (maxDisplay가 있으면 제한)
-  const displayComments = maxDisplay
-    ? comments.slice(0, maxDisplay)
-    : comments;
-  const hasMore = maxDisplay ? comments.length > maxDisplay : false;
+  // 표시할 댓글 (maxDisplay가 있으면 제한) - useMemo로 최적화
+  const displayComments = useMemo(() => {
+    return maxDisplay ? comments.slice(0, maxDisplay) : comments;
+  }, [comments, maxDisplay]);
+  
+  const hasMore = useMemo(() => {
+    return maxDisplay ? comments.length > maxDisplay : false;
+  }, [comments.length, maxDisplay]);
 
   if (loading && comments.length === 0) {
     return (
