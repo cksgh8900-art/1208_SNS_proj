@@ -84,6 +84,13 @@ export interface UserWithStats extends User {
 }
 
 /**
+ * 사용자 정보가 포함된 댓글 타입
+ */
+export interface CommentWithUser extends Comment {
+  user?: User; // JOIN된 사용자 정보
+}
+
+/**
  * API 응답 타입
  * API Route에서 사용할 표준 응답 형식
  */

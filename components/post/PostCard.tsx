@@ -5,8 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils/time";
-import type { PostWithStats } from "@/lib/types";
+import type { PostWithStats, CommentWithUser } from "@/lib/types";
 import LikeButton, { type LikeButtonHandle } from "./LikeButton";
+import CommentList from "@/components/comment/CommentList";
+import CommentForm from "@/components/comment/CommentForm";
 // Avatar 컴포넌트는 나중에 shadcn/ui로 추가 예정
 // 임시로 간단한 Avatar 구현
 
@@ -46,6 +48,9 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(post.is_liked || false);
   const lastTapRef = useRef(0);
   const likeButtonRef = useRef<LikeButtonHandle>(null);
+
+  // 댓글 관련 상태
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
 
   // 더블탭 감지 및 좋아요 처리
   const handleDoubleTap = useCallback(() => {
@@ -222,28 +227,27 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
         </div>
       )}
 
-      {/* 댓글 미리보기 */}
-      {post.comments_count > 0 && (
-        <div className="px-4 pb-3">
-          <button
-            className="text-instagram-sm text-instagram-text-secondary hover:text-instagram-text-primary mb-2"
-            onClick={() => {
-              // 나중에 댓글 상세 모달 구현
-              alert("댓글 상세 기능은 곧 추가될 예정입니다.");
-            }}
-          >
-            댓글 {post.comments_count}개 모두 보기
-          </button>
-          {/* 나중에 실제 댓글 데이터를 표시 */}
-          {/* <div className="space-y-1">
-            {comments.slice(0, 2).map((comment) => (
-              <p key={comment.id} className="text-instagram-sm text-instagram-text-primary">
-                <span className="font-instagram-bold">{comment.user.name}</span> {comment.content}
-              </p>
-            ))}
-          </div> */}
-        </div>
-      )}
+      {/* 댓글 목록 (최신 2개만 표시) */}
+      <CommentList
+        postId={post.id}
+        maxDisplay={2}
+        showDeleteButton={true}
+        currentUserId={currentUserId}
+        onCommentDelete={(commentId) => {
+          // 댓글 삭제 후 댓글 수 감소
+          setCommentsCount((prev) => Math.max(0, prev - 1));
+        }}
+      />
+
+      {/* 댓글 작성 폼 */}
+      <CommentForm
+        postId={post.id}
+        onSubmit={(comment) => {
+          // 댓글 작성 후 댓글 수 증가
+          setCommentsCount((prev) => prev + 1);
+        }}
+        placeholder="댓글 달기..."
+      />
     </article>
   );
 }
