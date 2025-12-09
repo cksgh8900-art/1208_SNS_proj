@@ -21,12 +21,14 @@ interface PostGridProps {
   userId: string; // Supabase user_id
   initialPosts?: PostWithStats[]; // 초기 게시물 (SSR용)
   onPostClick?: (post: PostWithStats) => void; // 게시물 클릭 콜백
+  onPostDelete?: (postId: string) => void; // 게시물 삭제 콜백
 }
 
 export default function PostGrid({
   userId,
   initialPosts,
   onPostClick,
+  onPostDelete,
 }: PostGridProps) {
   const [posts, setPosts] = useState<PostWithStats[]>(initialPosts || []);
   const [loading, setLoading] = useState(!initialPosts);
@@ -190,6 +192,14 @@ export default function PostGrid({
             setPosts((prev) =>
               prev.map((p) => (p.id === newPost.id ? newPost : p))
             );
+          }}
+          onPostDelete={(postId) => {
+            // 게시물 삭제 시 목록에서 제거
+            setPosts((prev) => prev.filter((p) => p.id !== postId));
+            setPostModalOpen(false);
+            if (onPostDelete) {
+              onPostDelete(postId);
+            }
           }}
         />
       )}

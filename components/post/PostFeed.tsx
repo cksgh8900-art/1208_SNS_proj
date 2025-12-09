@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "@clerk/nextjs";
 import PostCard from "./PostCard";
 import PostCardSkeleton from "./PostCardSkeleton";
 import type { PostWithStats } from "@/lib/types";
@@ -25,6 +26,7 @@ interface PostFeedProps {
 }
 
 export default function PostFeed({ userId, initialPosts }: PostFeedProps) {
+  const { userId: clerkUserId } = useAuth();
   const [posts, setPosts] = useState<PostWithStats[]>(initialPosts || []);
   const [loading, setLoading] = useState(!initialPosts);
   const [hasMore, setHasMore] = useState(true);
@@ -136,11 +138,22 @@ export default function PostFeed({ userId, initialPosts }: PostFeedProps) {
     );
   }
 
+  // 게시물 삭제 핸들러
+  const handlePostDelete = useCallback((postId: string) => {
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
+  }, []);
+
   return (
     <div className="w-full">
       {/* 게시물 목록 */}
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} posts={posts} />
+        <PostCard
+          key={post.id}
+          post={post}
+          currentUserId={clerkUserId || undefined}
+          posts={posts}
+          onPostDelete={handlePostDelete}
+        />
       ))}
 
       {/* 로딩 Skeleton */}

@@ -1,15 +1,24 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react";
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Trash2 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils/time";
 import type { PostWithStats, CommentWithUser } from "@/lib/types";
 import LikeButton, { type LikeButtonHandle } from "./LikeButton";
 import CommentList from "@/components/comment/CommentList";
 import CommentForm from "@/components/comment/CommentForm";
 import PostModal from "./PostModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 // Avatar 컴포넌트는 나중에 shadcn/ui로 추가 예정
 // 임시로 간단한 Avatar 구현
 
@@ -32,15 +41,25 @@ interface PostCardProps {
   post: PostWithStats;
   currentUserId?: string;
   posts?: PostWithStats[]; // 게시물 목록 (PostModal 네비게이션용)
+  onPostDelete?: (postId: string) => void; // 게시물 삭제 콜백
 }
 
-export default function PostCard({ post, currentUserId, posts = [] }: PostCardProps) {
+export default function PostCard({ post, currentUserId, posts = [], onPostDelete }: PostCardProps) {
   const user = post.user;
   const userName = user?.name || "알 수 없음";
   const userInitials = userName.charAt(0).toUpperCase();
 
+  // 본인 게시물 여부 확인
+  const isOwnPost = currentUserId && user?.clerk_id === currentUserId;
+
   // PostModal 상태 관리
   const [postModalOpen, setPostModalOpen] = useState(false);
+
+  // 삭제 관련 상태
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // 캡션 처리 (2줄 초과 시 "... 더 보기")
   const [showFullCaption, setShowFullCaption] = useState(false);
@@ -88,6 +107,52 @@ export default function PostCard({ post, currentUserId, posts = [] }: PostCardPr
     setLikesCount(newLikesCount);
   }, []);
 
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMenu]);
+
+  // 게시물 삭제 핸들러
+  const handleDelete = useCallback(async () => {
+    if (deleting) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/posts/${post.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "게시물 삭제에 실패했습니다.");
+      }
+
+      // 성공 시 피드에서 제거
+      if (onPostDelete) {
+        onPostDelete(post.id);
+      }
+
+      setShowDeleteDialog(false);
+      setShowMenu(false);
+    } catch (error: any) {
+      console.error("게시물 삭제 에러:", error);
+      alert(error.message || "게시물 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setDeleting(false);
+    }
+  }, [post.id, deleting, onPostDelete]);
+
   return (
     <article className="bg-white border border-instagram-border border-t-0 mb-4">
       {/* 헤더 */}
@@ -110,16 +175,42 @@ export default function PostCard({ post, currentUserId, posts = [] }: PostCardPr
             </span>
           </div>
         </div>
-        <button
-          className="p-2 hover:bg-gray-50 rounded-lg transition-colors"
-          aria-label="더보기"
-          onClick={() => {
-            // 1차에서는 UI만, 나중에 메뉴 구현
-            alert("메뉴 기능은 곧 추가될 예정입니다.");
-          }}
-        >
-          <MoreHorizontal className="w-5 h-5 text-instagram-text-primary" />
-        </button>
+        <div className="relative" ref={menuRef}>
+          <button
+            className="p-2 hover:bg-gray-50 rounded-lg transition-colors"
+            aria-label="더보기"
+            onClick={() => setShowMenu(!showMenu)}
+          >
+            <MoreHorizontal className="w-5 h-5 text-instagram-text-primary" />
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 top-full mt-1 bg-white border border-instagram-border rounded-lg shadow-lg z-50 min-w-[160px]">
+              {isOwnPost && (
+                <button
+                  className="w-full px-4 py-3 text-left text-instagram-sm text-red-500 hover:bg-gray-50 flex items-center gap-2"
+                  onClick={() => {
+                    setShowDeleteDialog(true);
+                    setShowMenu(false);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  삭제
+                </button>
+              )}
+              {!isOwnPost && (
+                <button
+                  className="w-full px-4 py-3 text-left text-instagram-sm text-instagram-text-primary hover:bg-gray-50"
+                  onClick={() => {
+                    alert("신고 기능은 곧 추가될 예정입니다.");
+                    setShowMenu(false);
+                  }}
+                >
+                  신고
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
       {/* 이미지 영역 */}
@@ -279,6 +370,34 @@ export default function PostCard({ post, currentUserId, posts = [] }: PostCardPr
           // 필요시 여기에 로직 추가
         }}
       />
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>게시물 삭제</DialogTitle>
+            <DialogDescription>
+              이 게시물을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "삭제 중..." : "삭제"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </article>
   );
 }

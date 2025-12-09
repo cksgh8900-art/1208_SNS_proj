@@ -1,13 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X, ChevronLeft, ChevronRight, MessageCircle, Send, Bookmark, MoreHorizontal, Heart } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, MessageCircle, Send, Bookmark, MoreHorizontal, Heart, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { formatRelativeTime } from "@/lib/utils/time";
 import type { PostWithStats } from "@/lib/types";
 import LikeButton, { type LikeButtonHandle } from "./LikeButton";
@@ -36,6 +41,7 @@ interface PostModalProps {
   initialPost?: PostWithStats; // 초기 게시물 데이터 (선택사항)
   posts?: PostWithStats[]; // 게시물 목록 (이전/다음 네비게이션용)
   onPostChange?: (post: PostWithStats) => void; // 게시물 변경 콜백
+  onPostDelete?: (postId: string) => void; // 게시물 삭제 콜백
 }
 
 export default function PostModal({
@@ -45,9 +51,16 @@ export default function PostModal({
   initialPost,
   posts = [],
   onPostChange,
+  onPostDelete,
 }: PostModalProps) {
   const { userId: clerkUserId } = useAuth();
   const [currentPostId, setCurrentPostId] = useState(postId);
+  
+  // 삭제 관련 상태
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [post, setPost] = useState<PostWithStats | null>(initialPost || null);
   const [loading, setLoading] = useState(!initialPost);
   const [error, setError] = useState<string | null>(null);
@@ -237,8 +250,9 @@ export default function PostModal({
   const userInitials = userName.charAt(0).toUpperCase();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-full max-h-[90vh] p-0 overflow-hidden md:flex-row md:h-auto">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-5xl w-full max-h-[90vh] p-0 overflow-hidden md:flex-row md:h-auto">
         {/* Desktop: 이미지 영역 (50%) */}
         <div className="hidden md:flex md:w-1/2 md:relative md:bg-black md:items-center md:justify-center">
           {/* 이전 버튼 */}
@@ -325,15 +339,42 @@ export default function PostModal({
                 </span>
               </div>
             </div>
-            <button
-              className="p-2 hover:bg-gray-50 rounded-lg transition-colors"
-              aria-label="더보기"
-              onClick={() => {
-                alert("메뉴 기능은 곧 추가될 예정입니다.");
-              }}
-            >
-              <MoreHorizontal className="w-5 h-5 text-instagram-text-primary" />
-            </button>
+            <div className="relative" ref={menuRef}>
+              <button
+                className="p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                aria-label="더보기"
+                onClick={() => setShowMenu(!showMenu)}
+              >
+                <MoreHorizontal className="w-5 h-5 text-instagram-text-primary" />
+              </button>
+              {showMenu && post && (
+                <div className="absolute right-0 top-full mt-1 bg-white border border-instagram-border rounded-lg shadow-lg z-50 min-w-[160px]">
+                  {clerkUserId && post.user?.clerk_id === clerkUserId && (
+                    <button
+                      className="w-full px-4 py-3 text-left text-instagram-sm text-red-500 hover:bg-gray-50 flex items-center gap-2"
+                      onClick={() => {
+                        setShowDeleteDialog(true);
+                        setShowMenu(false);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      삭제
+                    </button>
+                  )}
+                  {clerkUserId && post.user?.clerk_id !== clerkUserId && (
+                    <button
+                      className="w-full px-4 py-3 text-left text-instagram-sm text-instagram-text-primary hover:bg-gray-50"
+                      onClick={() => {
+                        alert("신고 기능은 곧 추가될 예정입니다.");
+                        setShowMenu(false);
+                      }}
+                    >
+                      신고
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </header>
 
           {/* 댓글 목록 (스크롤 가능) */}
@@ -422,8 +463,37 @@ export default function PostModal({
             placeholder="댓글 달기..."
           />
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>게시물 삭제</DialogTitle>
+            <DialogDescription>
+              이 게시물을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "삭제 중..." : "삭제"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
