@@ -276,9 +276,12 @@ export default function PostModal({
               src={post.image_url}
               alt={post.caption || `${userName}의 게시물`}
               fill
-              className="object-contain"
+              className="object-contain transition-opacity duration-300"
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
+              onLoad={() => {
+                // 이미지 로딩 완료 시 페이드 인 효과는 CSS transition으로 처리됨
+              }}
             />
             {/* 더블탭 큰 하트 애니메이션 */}
             {showBigHeart && (
@@ -306,9 +309,12 @@ export default function PostModal({
             src={post.image_url}
             alt={post.caption || `${userName}의 게시물`}
             fill
-            className="object-contain"
+            className="object-contain transition-opacity duration-300"
             sizes="100vw"
             priority
+            onLoad={() => {
+              // 이미지 로딩 완료 시 페이드 인 효과는 CSS transition으로 처리됨
+            }}
           />
           {showBigHeart && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
@@ -348,10 +354,10 @@ export default function PostModal({
                 <MoreHorizontal className="w-5 h-5 text-instagram-text-primary" />
               </button>
               {showMenu && post && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-instagram-border rounded-lg shadow-lg z-50 min-w-[160px]">
+                <div className="absolute right-0 top-full mt-1 bg-white border border-instagram-border rounded-lg shadow-lg z-50 min-w-[160px] animate-[fadeIn_0.2s_ease-out_forwards]">
                   {clerkUserId && post.user?.clerk_id === clerkUserId && (
                     <button
-                      className="w-full px-4 py-3 text-left text-instagram-sm text-red-500 hover:bg-gray-50 flex items-center gap-2"
+                      className="w-full px-4 py-3 text-left text-instagram-sm text-red-500 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                       onClick={() => {
                         setShowDeleteDialog(true);
                         setShowMenu(false);
@@ -363,7 +369,7 @@ export default function PostModal({
                   )}
                   {clerkUserId && post.user?.clerk_id !== clerkUserId && (
                     <button
-                      className="w-full px-4 py-3 text-left text-instagram-sm text-instagram-text-primary hover:bg-gray-50"
+                      className="w-full px-4 py-3 text-left text-instagram-sm text-instagram-text-primary hover:bg-gray-50 transition-colors"
                       onClick={() => {
                         alert("신고 기능은 곧 추가될 예정입니다.");
                         setShowMenu(false);

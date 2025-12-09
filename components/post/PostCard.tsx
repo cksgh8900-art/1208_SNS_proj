@@ -184,10 +184,10 @@ export default function PostCard({ post, currentUserId, posts = [], onPostDelete
             <MoreHorizontal className="w-5 h-5 text-instagram-text-primary" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-white border border-instagram-border rounded-lg shadow-lg z-50 min-w-[160px]">
+            <div className="absolute right-0 top-full mt-1 bg-white border border-instagram-border rounded-lg shadow-lg z-50 min-w-[160px] animate-[fadeIn_0.2s_ease-out_forwards]">
               {isOwnPost && (
                 <button
-                  className="w-full px-4 py-3 text-left text-instagram-sm text-red-500 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-3 text-left text-instagram-sm text-red-500 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                   onClick={() => {
                     setShowDeleteDialog(true);
                     setShowMenu(false);
@@ -199,7 +199,7 @@ export default function PostCard({ post, currentUserId, posts = [], onPostDelete
               )}
               {!isOwnPost && (
                 <button
-                  className="w-full px-4 py-3 text-left text-instagram-sm text-instagram-text-primary hover:bg-gray-50"
+                  className="w-full px-4 py-3 text-left text-instagram-sm text-instagram-text-primary hover:bg-gray-50 transition-colors"
                   onClick={() => {
                     alert("신고 기능은 곧 추가될 예정입니다.");
                     setShowMenu(false);
@@ -235,10 +235,13 @@ export default function PostCard({ post, currentUserId, posts = [], onPostDelete
           src={post.image_url}
           alt={post.caption || `${userName}의 게시물`}
           fill
-          className="object-cover"
+          className="object-cover transition-opacity duration-300"
           sizes="(max-width: 768px) 100vw, 630px"
           loading="lazy"
           draggable={false}
+          onLoad={() => {
+            // 이미지 로딩 완료 시 페이드 인 효과는 CSS transition으로 처리됨
+          }}
           onError={(e) => {
             // 이미지 로딩 실패 시 대체 처리
             const target = e.target as HTMLImageElement;
@@ -248,7 +251,7 @@ export default function PostCard({ post, currentUserId, posts = [], onPostDelete
         {/* 더블탭 큰 하트 애니메이션 */}
         {showBigHeart && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-            <Heart className="w-20 h-20 fill-instagram-like text-instagram-like animate-fade-in-out" />
+            <Heart className="w-20 h-20 fill-instagram-like text-instagram-like animate-fade-in-out-heart" />
           </div>
         )}
       </div>

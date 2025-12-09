@@ -8,51 +8,81 @@
 
 export default function PostCardSkeleton() {
   return (
-    <article className="bg-white border border-instagram-border border-t-0 mb-4 animate-pulse">
+    <article className="bg-white border border-instagram-border border-t-0 mb-4">
       {/* 헤더 Skeleton */}
       <header className="flex items-center justify-between px-4 py-3 h-[60px]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gray-200" />
+          <div className="relative w-8 h-8 rounded-full overflow-hidden">
+            <div className="absolute inset-0 shimmer" />
+          </div>
           <div className="flex flex-col gap-2">
-            <div className="w-20 h-4 bg-gray-200 rounded" />
-            <div className="w-16 h-3 bg-gray-200 rounded" />
+            <div className="relative w-20 h-4 rounded overflow-hidden">
+              <div className="absolute inset-0 shimmer" />
+            </div>
+            <div className="relative w-16 h-3 rounded overflow-hidden">
+              <div className="absolute inset-0 shimmer" />
+            </div>
           </div>
         </div>
-        <div className="w-6 h-6 bg-gray-200 rounded" />
+        <div className="relative w-6 h-6 rounded overflow-hidden">
+          <div className="absolute inset-0 shimmer" />
+        </div>
       </header>
 
       {/* 이미지 Skeleton */}
-      <div className="relative w-full aspect-square bg-gray-200" />
+      <div className="relative w-full aspect-square overflow-hidden">
+        <div className="absolute inset-0 shimmer" />
+      </div>
 
       {/* 액션 버튼 Skeleton */}
       <div className="flex items-center justify-between px-4 py-3 h-[48px]">
         <div className="flex items-center gap-4">
-          <div className="w-6 h-6 bg-gray-200 rounded" />
-          <div className="w-6 h-6 bg-gray-200 rounded" />
-          <div className="w-6 h-6 bg-gray-200 rounded" />
+          <div className="relative w-6 h-6 rounded overflow-hidden">
+            <div className="absolute inset-0 shimmer" />
+          </div>
+          <div className="relative w-6 h-6 rounded overflow-hidden">
+            <div className="absolute inset-0 shimmer" />
+          </div>
+          <div className="relative w-6 h-6 rounded overflow-hidden">
+            <div className="absolute inset-0 shimmer" />
+          </div>
         </div>
-        <div className="w-6 h-6 bg-gray-200 rounded" />
+        <div className="relative w-6 h-6 rounded overflow-hidden">
+          <div className="absolute inset-0 shimmer" />
+        </div>
       </div>
 
       {/* 좋아요 수 Skeleton */}
       <div className="px-4 pb-2">
-        <div className="w-24 h-4 bg-gray-200 rounded" />
+        <div className="relative w-24 h-4 rounded overflow-hidden">
+          <div className="absolute inset-0 shimmer" />
+        </div>
       </div>
 
       {/* 캡션 Skeleton */}
       <div className="px-4 pb-2">
         <div className="space-y-2">
-          <div className="w-full h-4 bg-gray-200 rounded" />
-          <div className="w-3/4 h-4 bg-gray-200 rounded" />
+          <div className="relative w-full h-4 rounded overflow-hidden">
+            <div className="absolute inset-0 shimmer" />
+          </div>
+          <div className="relative w-3/4 h-4 rounded overflow-hidden">
+            <div className="absolute inset-0 shimmer" />
+          </div>
         </div>
       </div>
 
       {/* 댓글 미리보기 Skeleton */}
       <div className="px-4 pb-3">
-        <div className="w-32 h-3 bg-gray-200 rounded mb-2" />
+        <div className="relative w-32 h-3 rounded mb-2 overflow-hidden">
+          <div className="absolute inset-0 shimmer" />
+        </div>
         <div className="space-y-1">
-          <div className="w-full h-3 bg-gray-200 rounded" />
-          <div className="w-4/5 h-3 bg-gray-200 rounded" />
+          <div className="relative w-full h-3 rounded overflow-hidden">
+            <div className="absolute inset-0 shimmer" />
+          </div>
+          <div className="relative w-4/5 h-3 rounded overflow-hidden">
+            <div className="absolute inset-0 shimmer" />
+          </div>
         </div>
       </div>
     </article>

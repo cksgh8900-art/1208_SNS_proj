@@ -264,16 +264,31 @@
 
 ## 11. 반응형 및 애니메이션
 
-- [ ] 반응형 브레이크포인트 적용
-  - [ ] Mobile (< 768px): BottomNav, Header 표시
-  - [ ] Tablet (768px ~ 1023px): Icon-only Sidebar
-  - [ ] Desktop (1024px+): Full Sidebar
-- [ ] 좋아요 애니메이션
-  - [ ] 클릭 시 scale(1.3) → scale(1) (0.15초)
-  - [ ] 더블탭 시 큰 하트 fade in/out (1초)
-- [ ] 로딩 상태
-  - [ ] Skeleton UI (PostCardSkeleton)
-  - [ ] Shimmer 효과
+- [x] 반응형 브레이크포인트 검증 및 개선
+  - [x] 레이아웃 컴포넌트 검증 (Sidebar, Header, BottomNav)
+  - [x] Mobile (< 768px): BottomNav, Header 표시 확인
+  - [x] Tablet (768px ~ 1023px): Icon-only Sidebar 확인
+  - [x] Desktop (1024px+): Full Sidebar 확인
+  - [x] PostCard 반응형 검증
+  - [x] 프로필 페이지 반응형 검증
+- [x] 좋아요 애니메이션 검증 및 개선
+  - [x] 클릭 시 scale(1.3) → scale(1) (0.15초) 확인
+  - [x] 더블탭 시 큰 하트 fade in/out (1초) 확인
+  - [x] 애니메이션 easing 함수 확인
+  - [x] 성능 최적화 (transform 사용)
+- [x] 로딩 상태 개선
+  - [x] Skeleton UI 검증 (PostCardSkeleton)
+  - [x] Shimmer 효과 추가
+  - [x] PostGridSkeleton Shimmer 효과 추가
+- [x] 추가 애니메이션 개선
+  - [x] 버튼 Hover 효과 개선
+  - [x] 모달 애니메이션 검증
+  - [x] 드롭다운 메뉴 애니메이션 개선 (페이드 인/아웃, 슬라이드 다운)
+  - [x] 이미지 로딩 애니메이션 개선 (페이드 인 효과)
+- [x] 성능 최적화
+  - [x] 애니메이션 성능 최적화 (GPU 가속)
+  - [x] 반응형 성능 최적화
+  - [x] 접근성 고려 (prefers-reduced-motion)
 
 ## 12. 에러 핸들링 및 최적화
 
