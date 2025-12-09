@@ -9,6 +9,7 @@ import type { PostWithStats, CommentWithUser } from "@/lib/types";
 import LikeButton, { type LikeButtonHandle } from "./LikeButton";
 import CommentList from "@/components/comment/CommentList";
 import CommentForm from "@/components/comment/CommentForm";
+import PostModal from "./PostModal";
 // Avatar 컴포넌트는 나중에 shadcn/ui로 추가 예정
 // 임시로 간단한 Avatar 구현
 
@@ -30,12 +31,16 @@ import CommentForm from "@/components/comment/CommentForm";
 interface PostCardProps {
   post: PostWithStats;
   currentUserId?: string;
+  posts?: PostWithStats[]; // 게시물 목록 (PostModal 네비게이션용)
 }
 
-export default function PostCard({ post, currentUserId }: PostCardProps) {
+export default function PostCard({ post, currentUserId, posts = [] }: PostCardProps) {
   const user = post.user;
   const userName = user?.name || "알 수 없음";
   const userInitials = userName.charAt(0).toUpperCase();
+
+  // PostModal 상태 관리
+  const [postModalOpen, setPostModalOpen] = useState(false);
 
   // 캡션 처리 (2줄 초과 시 "... 더 보기")
   const [showFullCaption, setShowFullCaption] = useState(false);
@@ -53,7 +58,11 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
   const [commentsCount, setCommentsCount] = useState(post.comments_count);
 
   // 더블탭 감지 및 좋아요 처리
-  const handleDoubleTap = useCallback(() => {
+  const handleDoubleTap = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300; // 300ms 이내 더블탭으로 간주
 
@@ -115,11 +124,20 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
 
       {/* 이미지 영역 */}
       <div
-        className="relative w-full aspect-square bg-gray-100 cursor-pointer select-none"
-        onDoubleClick={handleDoubleTap}
+        className="relative w-full aspect-square bg-gray-100 cursor-pointer"
+        onDoubleClick={(e) => {
+          handleDoubleTap(e);
+        }}
         onTouchEnd={(e) => {
-          // 모바일 터치 이벤트 지원
-          handleDoubleTap();
+          // 모바일 더블탭 처리
+          handleDoubleTap(e);
+        }}
+        onClick={(e) => {
+          // 더블탭이 아닌 경우에만 모달 열기
+          const now = Date.now();
+          if (now - lastTapRef.current >= 300) {
+            setPostModalOpen(true);
+          }
         }}
       >
         <Image
@@ -247,6 +265,19 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
           setCommentsCount((prev) => prev + 1);
         }}
         placeholder="댓글 달기..."
+      />
+
+      {/* PostModal */}
+      <PostModal
+        postId={post.id}
+        open={postModalOpen}
+        onOpenChange={setPostModalOpen}
+        initialPost={post}
+        posts={posts}
+        onPostChange={(newPost) => {
+          // 게시물 변경 시 PostCard 업데이트 (선택사항)
+          // 필요시 여기에 로직 추가
+        }}
       />
     </article>
   );
