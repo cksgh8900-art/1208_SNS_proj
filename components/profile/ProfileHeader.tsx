@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import FollowButton from "./FollowButton";
 import type { UserWithStats } from "@/lib/types";
 
 /**
@@ -48,24 +49,12 @@ export default function ProfileHeader({
     alert("팔로잉 목록 기능은 곧 추가될 예정입니다.");
   };
 
-  // 팔로우 버튼 클릭 핸들러 (1차에서는 UI만, 실제 기능은 다음 단계)
-  const handleFollowClick = () => {
-    if (isFollowing) {
-      // 언팔로우 (1차에서는 UI만)
-      setIsFollowing(false);
-      setFollowersCount((prev) => Math.max(0, prev - 1));
-      if (onFollowChange) {
-        onFollowChange(false);
-      }
-      alert("언팔로우 기능은 곧 추가될 예정입니다.");
-    } else {
-      // 팔로우 (1차에서는 UI만)
-      setIsFollowing(true);
-      setFollowersCount((prev) => prev + 1);
-      if (onFollowChange) {
-        onFollowChange(true);
-      }
-      alert("팔로우 기능은 곧 추가될 예정입니다.");
+  // 팔로우 상태 변경 핸들러
+  const handleFollowChange = (newIsFollowing: boolean, newFollowersCount: number) => {
+    setIsFollowing(newIsFollowing);
+    setFollowersCount(newFollowersCount);
+    if (onFollowChange) {
+      onFollowChange(newIsFollowing);
     }
   };
 
@@ -101,16 +90,13 @@ export default function ProfileHeader({
                 </Button>
               ) : (
                 <>
-                  <Button
-                    onClick={handleFollowClick}
-                    className={`text-instagram-sm font-instagram-semibold ${
-                      isFollowing
-                        ? "bg-gray-200 text-instagram-text-primary hover:bg-red-50 hover:text-red-500 hover:border-red-500"
-                        : "bg-instagram-blue text-white hover:bg-blue-600"
-                    }`}
-                  >
-                    {isFollowing ? "팔로잉" : "팔로우"}
-                  </Button>
+                  <FollowButton
+                    followingId={user.id}
+                    initialFollowing={isFollowing}
+                    initialFollowersCount={followersCount}
+                    onFollowChange={handleFollowChange}
+                    size="md"
+                  />
                   <Button
                     variant="outline"
                     className="text-instagram-sm font-instagram-semibold"
